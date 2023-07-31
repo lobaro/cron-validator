@@ -479,4 +479,219 @@ describe('validate', () => {
     const validWithAliases = isValidCron('* * ? * ?', { alias: true, allowBlankDay: true })
     expect(validWithAliases).toBeFalsy()
   })
+
+  it('should not accept H if allowHashed is not set', () => {
+    const valid = isValidCron('H * * * *')
+    expect(valid).toBeFalsy()
+
+    const validWithSeconds = isValidCron('* * H * * *', {seconds: true} )
+    expect(validWithSeconds).toBeFalsy()
+
+    const validWithAlias = isValidCron('* * H * THU', {alias: true} )
+    expect(validWithAlias).toBeFalsy()
+  })
+
+  it('should accept H if allowHashed is set', () => {
+    const valid = isValidCron('H * * * *', {allowHashed: true})
+    expect(valid).toBeTruthy()
+
+    const validWithSeconds = isValidCron('* * H * * *', {allowHashed: true, seconds: true} )
+    expect(validWithSeconds).toBeTruthy()
+
+    const validWithAlias = isValidCron('* * H * THU', {allowHashed: true, alias: true} )
+    expect(validWithAlias).toBeTruthy()
+  })
+
+  it('should not accept H with ranges if allowHashed is not set', () => {
+    const valid = isValidCron('H(0-20) * * * *')
+    expect(valid).toBeFalsy()
+
+    const validWithSeconds = isValidCron('* * H(10-15) * * *', {seconds: true} )
+    expect(validWithSeconds).toBeFalsy()
+
+    const validWithAlias = isValidCron('* * H(1-8) * THU', {alias: true} )
+    expect(validWithAlias).toBeFalsy()
+
+    const validWithRange = isValidCron('* * H(1-8)-10 * *')
+    expect(validWithRange).toBeFalsy()
+  })
+
+  it('should accept H with ranges if allowHashed is set', () => {
+    const valid = isValidCron('H(0-20) * * * *', {allowHashed: true})
+    expect(valid).toBeTruthy()
+
+    const validWithSeconds = isValidCron('* * H(10-15) * * *', {allowHashed: true, seconds: true} )
+    expect(validWithSeconds).toBeTruthy()
+
+    const validWithAlias = isValidCron('* * H(1-8) * THU', {allowHashed: true, alias: true} )
+    expect(validWithAlias).toBeTruthy()
+
+    const validWithNoRange = isValidCron('* * H( * THU', {allowHashed: true, alias: true} )
+    expect(validWithNoRange).toBeFalsy()
+  })
+
+  it('should not accept H with invalid ranges even if allowHashed is set', () => {
+    const valid = isValidCron('H(0-61) * * * *', {allowHashed: true})
+    expect(valid).toBeFalsy()
+
+    const validWithSeconds = isValidCron('* * H(0-25) * * *', {allowHashed: true, seconds: true} )
+    expect(validWithSeconds).toBeFalsy()
+
+    const validWithAlias = isValidCron('* * H(0-8) * THU', {allowHashed: true, alias: true} )
+    expect(validWithAlias).toBeFalsy()
+
+    const validWithWrongDOM = isValidCron('* * H(1-32) * THU', {allowHashed: true, alias: true} )
+    expect(validWithWrongDOM).toBeFalsy()
+
+    const validWithRange = isValidCron('H(0-30)-50 * * * *', {allowHashed: true})
+    expect(validWithRange).toBeFalsy()
+
+    const validWithReverse = isValidCron('H(30-0) * * * *', {allowHashed: true})
+    expect(validWithReverse).toBeFalsy()
+  })
+
+  it('should accept H with iterators if allowHashed is set', () => {
+    const valid = isValidCron('H/8 * * * *', {allowHashed: true})
+    expect(valid).toBeTruthy()
+
+    const validWithSeconds = isValidCron('* * H(10-15)/2 * * *', {allowHashed: true, seconds: true} )
+    expect(validWithSeconds).toBeTruthy()
+
+    const validWithAlias = isValidCron('* * H/4 * THU', {allowHashed: true, alias: true} )
+    expect(validWithAlias).toBeTruthy()
+
+    // TODO: Iterators are always valid if they're integers. Maybe behaviour changes in the future?
+    //const validWithWrongIterator = isValidCron('* * H/32 * THU', {allowHashed: true, alias: true} )
+    //expect(validWithWrongIterator).toBeFalsy()
+
+    // TODO: Allow H as a step val? No.
+    const validWithHstep = isValidCron('* * 4/H * *', {allowHashed: true} )
+    expect(validWithHstep).toBeFalsy()
+
+    const validWithHstep2 = isValidCron('* * 4/H(1-5) * *', {allowHashed: true} )
+    expect(validWithHstep2).toBeFalsy()
+  })
+
+  it('should not accept H in a range if allowHashed is set', () => {
+    const valid = isValidCron('H-8 * * * *', {allowHashed: true})
+    expect(valid).toBeFalsy()
+
+    const validWithSeconds = isValidCron('* * H-2 * * *', {allowHashed: true, seconds: true} )
+    expect(validWithSeconds).toBeFalsy()
+
+    const validWithAlias = isValidCron('* * H-4 * THU', {allowHashed: true, alias: true} )
+    expect(validWithAlias).toBeFalsy()
+  })
+
+  // TODO: Decide if multiple H in one field should be supported? Would only work properly if their ranges were starting at different points
+
+  it('should not accept L if allowLast is not set', () => {
+    const valid = isValidCron('* * L * *')
+    expect(valid).toBeFalsy()
+
+    const validWithSeconds = isValidCron('* * * L * *', {seconds: true})
+    expect(validWithSeconds).toBeFalsy()
+
+    const validWithAlias = isValidCron('* * L * WED', {alias: true})
+    expect(validWithAlias).toBeFalsy()
+
+    const validWithWrongField = isValidCron('* L * * *')
+    expect(validWithWrongField).toBeFalsy()
+  })
+
+  it('should accept L in DOM and DOW if allowLast is set', () => {
+    const validDOM = isValidCron('* * L * *', {allowLast: true})
+    expect(validDOM).toBeTruthy()
+
+    const validLW = isValidCron('* * LW * *', {allowLast: true, allowWeekday: true})
+    expect(validLW).toBeTruthy()
+
+    const validLWDOW = isValidCron('* * * * LW', {allowLast: true, allowWeekday: true})
+    expect(validLWDOW).toBeFalsy()
+
+    const validDOMAlias = isValidCron('* * L * WED', {allowLast: true, alias:true})
+    expect(validDOMAlias).toBeTruthy()
+
+    const validDOMsec = isValidCron('* * * L * THU', {allowLast: true, alias: true, seconds: true})
+    expect(validDOMsec).toBeTruthy()
+
+    const validDOMOffset = isValidCron('* * L-2 * *', {allowLast: true})
+    expect(validDOMOffset).toBeTruthy()
+
+    const validDOW = isValidCron('* * * * L', {allowLast: true})
+    expect(validDOW).toBeTruthy()
+
+    const validDOWDay = isValidCron('* * * * 2L', {allowLast: true})
+    expect(validDOWDay).toBeTruthy()
+
+    const validWithWrongField = isValidCron('* L * * *', {allowLast: true})
+    expect(validWithWrongField).toBeFalsy()
+
+    const validWithSeconds = isValidCron('L * * * * *', {allowLast: true, seconds: true})
+    expect(validWithSeconds).toBeFalsy()
+  })
+
+  it('should not accept L in invalid places or with invalid offsets/values', () => {
+    const validDOM = isValidCron('* L L * *', {allowLast: true})
+    expect(validDOM).toBeFalsy()
+
+    const validDOMOffset = isValidCron('* L-2 L-3 * *', {allowLast: true})
+    expect(validDOMOffset).toBeFalsy()
+
+    const validDOW = isValidCron('* * * * L *', {allowLast: true, seconds: true})
+    expect(validDOW).toBeFalsy()
+
+    const validDOWDay = isValidCron('* * * * 2L-2', {allowLast: true})
+    expect(validDOWDay).toBeFalsy()
+
+    const validDOMDay = isValidCron('* * * 3L * 2L', {allowLast: true, seconds: true})
+    expect(validDOMDay).toBeFalsy()
+  })
+
+  it('should not accept W if allowWeekdays is not set', () => {
+    const validDOM = isValidCron('* * 1W * *')
+    expect(validDOM).toBeFalsy()
+
+    const validDOW = isValidCron('* * * 5W * *', {seconds: true})
+    expect(validDOW).toBeFalsy()
+
+    const validDOWDay = isValidCron('* * 2W * THU', {alias: true})
+    expect(validDOWDay).toBeFalsy()
+
+    const validDOMDay = isValidCron('* * * 3W * 2L', {allowLast: true, seconds: true})
+    expect(validDOMDay).toBeFalsy()
+  })
+
+  it('should accept W if allowWeekdays is set', () => {
+    const validDOM = isValidCron('* * 1W * *', {allowWeekday: true})
+    expect(validDOM).toBeTruthy()
+
+    const validDOW = isValidCron('* * * 5W * *', {allowWeekday: true, seconds: true})
+    expect(validDOW).toBeTruthy()
+
+    const validDOWDay = isValidCron('* * 2W * THU', {allowWeekday: true, alias: true})
+    expect(validDOWDay).toBeTruthy()
+
+    const validDOMDay = isValidCron('* * * 3W * *', {allowWeekday: true, seconds: true})
+    expect(validDOMDay).toBeTruthy()
+  })
+
+  it('should not accept W in invalid fields or combinations', () => {
+    const validDOM = isValidCron('* * * 1W *', {allowWeekday: true})
+    expect(validDOM).toBeFalsy()
+
+    const validDOW = isValidCron('* * * 32W * *', {allowWeekday: true, seconds: true})
+    expect(validDOW).toBeFalsy()
+
+    const validDOWDay = isValidCron('* * 2W-5 * THU', {allowWeekday: true, alias: true})
+    expect(validDOWDay).toBeFalsy()
+
+    const validDOWDay2 = isValidCron('* * 2-5W * THU', {allowWeekday: true, alias: true})
+    expect(validDOWDay2).toBeFalsy()
+
+    const validDOMDay = isValidCron('* * * * * 2W', {allowWeekday: true, seconds: true})
+    expect(validDOMDay).toBeFalsy()
+  })
+
+  // TODO: L and W usage with iterators?
 })
