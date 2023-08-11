@@ -88,7 +88,7 @@ cron.isValidCron('* * * * 7', { allowSevenAsSunday: true });
 - [x] Support blank day notation with `?` symbol.
 - [x] Support both 0-6 and 1-7 ranges for weekdays.
 - [ ] ~~Have an explain mode returning the fragments in error.~~
-- [x] Support 'L', 'W' and 'H' usage.
+- [x] Support 'H', 'L' and 'W' usage.
 
 ## Motivations
 
