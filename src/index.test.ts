@@ -563,11 +563,11 @@ describe('validate', () => {
     const validWithAlias = isValidCron('* * H/4 * THU', {allowHashed: true, alias: true} )
     expect(validWithAlias).toBeTruthy()
 
-    // TODO: Iterators are always valid if they're integers. Maybe behaviour changes in the future?
+    // Steps are always valid if they're integers above 0. Maybe behaviour changes in the future
     //const validWithWrongIterator = isValidCron('* * H/32 * THU', {allowHashed: true, alias: true} )
     //expect(validWithWrongIterator).toBeFalsy()
 
-    // TODO: Allow H as a step val? No.
+    // H cannot be a valid step value
     const validWithHstep = isValidCron('* * 4/H * *', {allowHashed: true} )
     expect(validWithHstep).toBeFalsy()
 
@@ -696,5 +696,31 @@ describe('validate', () => {
     expect(validDOMDay).toBeFalsy()
   })
 
-  // TODO: L and W usage with iterators?
+  it('should not accept L in iterators', () => {
+    const validDOM = isValidCron('* * L/5 * *', {allowLast: true})
+    expect(validDOM).toBeFalsy()
+
+    const validDOMOffset = isValidCron('* * 3/L * *', {allowLast: true})
+    expect(validDOMOffset).toBeFalsy()
+
+    const validDOW = isValidCron('* * * * * L/2', {allowLast: true, seconds: true})
+    expect(validDOW).toBeFalsy()
+
+    const validDOW2 = isValidCron('* * * * * 2/L', {allowLast: true, seconds: true})
+    expect(validDOW2).toBeFalsy()
+  })
+
+  it('should not accept W in iterators', () => {
+    const validDOM = isValidCron('* * 1W/5 * *')
+    expect(validDOM).toBeFalsy()
+
+    const validDOW = isValidCron('* * * 2/5W * *', {seconds: true})
+    expect(validDOW).toBeFalsy()
+
+    const validDOWDay = isValidCron('* * 2W/5 * THU', {alias: true})
+    expect(validDOWDay).toBeFalsy()
+
+    const validDOMDay = isValidCron('* * * 3/3W * 2L', {allowLast: true, seconds: true})
+    expect(validDOMDay).toBeFalsy()
+  })
 })

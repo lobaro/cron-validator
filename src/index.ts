@@ -92,6 +92,11 @@ const validateForRange = (value: string, start: number, stop: number, allowHashe
       return false
     }
 
+    // If L or W is used, check that no step is present
+    if ( (splits[1] !== undefined) && (splits[0].search(/[LW]/) !== -1 ) ) {
+      return false
+    }
+
     // If we don't have a `/`, right will be undefined which is considered a valid step if we don't a `/`.
     const [left, right] = splits
     return isValidRange(left, start, stop, allowHashed, allowLast, allowWeekday, inWeekday) && isValidStep(right)
